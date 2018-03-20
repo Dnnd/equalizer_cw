@@ -20,3 +20,7 @@ void DecodedAudioReciever::recieveBuffer() {
     decodedBuffers_.emplace_back(decoder_->read());
 }
 
+QAudioFormat DecodedAudioReciever::format() const {
+    return decoder_->audioFormat();
+}
+

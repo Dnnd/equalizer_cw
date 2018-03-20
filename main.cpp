@@ -24,21 +24,17 @@ int main(int argc, char *argv[]) {
     QAudioDecoder decoder{};
     QAudioFormat format = QAudioDeviceInfo::defaultOutputDevice().preferredFormat();
 
-
     decoder.setAudioFormat(format);
     decoder.setSourceFilename("/home/danm/14_Magika.wav");
 
     DecodedAudioReciever reciever{&decoder, &app};
 
     QAudioOutput audioOutput{decoder.audioFormat()};
+
     QByteArray bytea;
+    bytea.resize(format.bytesForDuration(100 * 1000));
 
     QObject::connect(&reciever, &DecodedAudioReciever::finished, [&] {
-
-        for (auto i = reciever.begin<QAudioBuffer::S16S>();
-             i != reciever.at<QAudioBuffer::S16S>(format.framesForDuration(100 * 1000)); ++i) {
-            bytea.append(toChar(*i), format.bytesPerFrame());
-        }
 
         QBuffer *od = new QBuffer{&bytea};
 
@@ -46,13 +42,17 @@ int main(int argc, char *argv[]) {
 
         std::vector<SosFilter> filters;
         filters.emplace_back(NUM, DEN, MWSPT_NSEC);
+        qDebug() << "PROC IN DA HOUSE";
 
-        AudioProcessor *proc = new AudioProcessor(&reciever, od, std::move(filters), &app);
+        AudioProcessor *proc = new AudioProcessor(&reciever, &bytea, od, std::move(filters),100, &app);
 
         QObject::connect(&audioOutput, &QAudioOutput::notify, proc, &AudioProcessor::onNotify);
 
-        audioOutput.start(od);
         audioOutput.setNotifyInterval(100);
+
+
+        audioOutput.start(od);
+        proc->onNotify();
     });
 
 

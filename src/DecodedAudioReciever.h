@@ -22,6 +22,8 @@ public:
     template<typename SampleType>
     DecodedAudioIterator<SampleType> at(std::size_t frame);
 
+    QAudioFormat format() const;
+
 signals:
     void finished();
 
@@ -45,7 +47,7 @@ DecodedAudioIterator<SampleType> DecodedAudioReciever::end() {
 
 template<typename SampleType>
 DecodedAudioIterator<SampleType> DecodedAudioReciever::at(std::size_t frame) {
-    return DecodedAudioIterator<SampleType>{&decodedBuffers_};
+    return DecodedAudioIterator<SampleType>{&decodedBuffers_, frame};
 }
 
 

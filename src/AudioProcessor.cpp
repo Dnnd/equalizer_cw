@@ -2,60 +2,95 @@
 #include "AudioProcessor.h"
 
 AudioProcessor::AudioProcessor(DecodedAudioReciever *reciever,
-                               QBuffer *audioBuffer,
+                               QByteArray *audioBuffer,
+                               QBuffer *ab,
                                std::vector<SosFilter> filters,
+                               std::size_t notifyInterval,
                                QObject *parent)
         : QObject{parent},
+          filters_{std::move(filters)},
+          notifyInterval_{notifyInterval},
+          processed_{0},
+          ab_{ab},
           reciever_{reciever},
-          audioBuffer_{audioBuffer},
-          buffer_{audioBuffer->buffer()},
-          filters_{std::move(filters)} {
+          buffer_{audioBuffer} {
+    for (auto &&filter : filters_) {
+        filter.setBufferSize(reciever->format().framesForDuration(notifyInterval * 1000));
+        controllers_.push_back(new SosFilterController{filter, this});
+    }
+    for (auto &&controller: controllers_) {
+        QObject::connect(controller, &SosFilterController::newBlockArrived, this, &AudioProcessor::onNewBlockArrived);
+    }
+
 }
 
 void AudioProcessor::onNotify() {
 
-    auto getFrames = [this](const SosFilter &filter) {
-        auto iter = reciever_->at<const QAudioBuffer::S16S>(processed);
-        std::vector<QAudioBuffer::S16S> frames;
-        frames.reserve(format.framesForDuration(notifyInterval * 1000));
-        for (auto i = 0; i < frames.size(); ++i) {
-            const QAudioBuffer::S16S frame = filter.processFrame<QAudioBuffer::S16S>(*iter);
-            frames.push_back(std::move(frame));
-            ++iter;
-        }
-        return std::move(frames);
-    };
+    using Frame = QAudioBuffer::S16S;
+    auto from = reciever_->at<Frame>(processed_);
+    auto end = reciever_->at<Frame>(processed_ + reciever_->format().framesForDuration(notifyInterval_ * 1000));
 
-    auto mergeFrames = [](std::vector<QAudioBuffer::S16S> &result, const std::vector<QAudioBuffer::S16S> &frames) {
-        if (result.size() == 0) {
-            result.reserve(frames.size());
-            for (auto &&i: frames) {
-                result.push_back(i);
+    auto taskProducer = [from, end](auto &filter) {
+        return [&filter, from, end] {
+            for (auto i = from; i != end; ++i) {
+                filter.processFrame(*i);
             }
-            return;
-        }
-        for (std::size_t i = 0; i < frames.size(); ++i) {
-            result[i].left += frames[i].left;
-            result[i].right += frames[i].right;
-        }
+            return filter.harvest();
+        };
     };
 
-    QFuture<std::vector<QAudioBuffer::S16S>> future = QtConcurrent::mappedReduced(
-            &filters_,
-            getFrames,
-            mergeFrames
-    );
+    using FrameBlock_t = std::vector<SecondOrderSection<CoeffType>::CalcFrame>;
+    for (auto i = 0; i < filters_.size(); ++i) {
+        auto task = taskProducer(filters_[i]);
+        auto *watcher = new QFutureWatcher<FrameBlock_t>();
+        QFuture<FrameBlock_t> future = QtConcurrent::run(task);
 
-    future.waitForFinished();
-    auto res = future.result();
-    buffer_.replace(0,
-                    res.size() * format.bytesPerFrame(),
-                    reinterpret_cast<const char *>(res.data()),
-                    res.size() * format.bytesPerFrame());
+        QObject::connect(watcher, &QFutureWatcher<FrameBlock_t>::finished, controllers_[i], [this, watcher, i] {
+            auto block = watcher->result();
+            controllers_[i]->onNewBlock(std::move(block));
+        });
+
+        QObject::connect(watcher, &QFutureWatcher<FrameBlock_t>::finished, &QObject::deleteLater);
+        watcher->setFuture(future);
+    }
+
 }
 
-void AudioProcessor::configure(QAudioOutput *output) {
-    format = output->format();
-    notifyInterval = output->notifyInterval();
+void AudioProcessor::onNewBlockArrived(std::size_t blockNumber) {
+
+    auto blockPtr = blocksCalculated_.find(blockNumber);
+
+    if (blockPtr == blocksCalculated_.end()) {
+        blockPtr = blocksCalculated_.emplace(blockNumber, 1).first;
+    }
+
+    if (blockPtr->second == filters_.size()) {
+        summarize(blockNumber);
+        blocksCalculated_.erase(blockPtr);
+    }
+}
+
+void AudioProcessor::summarize(std::size_t blockNumber) {
+
+    using FrameBlock = std::vector<SecondOrderSection<CoeffType>::CalcFrame>;
+
+    using Frame = QAudioBuffer::S16S;
+    std::vector<Frame> output;
+    auto format = reciever_->format();
+
+    output.resize(format.framesForDuration(notifyInterval_ * 1000));
+
+    for (auto &&controller:controllers_) {
+        FrameBlock block = controller->takeBlock();
+        for (std::size_t i = 0; i < output.size(); ++i) {
+
+            output[i].left += block[i].left;
+            output[i].right += block[i].right;
+        }
+    }
+    processed_ += format.framesForDuration(notifyInterval_ * 1000);
+    ab_->seek(0);
+    ab_->write((const char *) output.data(), format.bytesForDuration(notifyInterval_ * 1000));
+    ab_->seek(0);
 
 }

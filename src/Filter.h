@@ -15,10 +15,18 @@ public:
     Filter(const CoeffType (*num)[NumLen], const CoeffType (*den)[DenLen], std::size_t len);
 
     template<typename Frame>
-    Frame processFrame(Frame frame);
+    void processFrame(Frame frame);
+
+    void prepareSections();
+
+    void setBufferSize(std::size_t buffSize);
+
+    std::vector<SecondOrderSection<CoeffType>::CalcFrame> harvest();
 
 private:
-    mutable std::vector<SecondOrderSection<CoeffType>> sections_;
+    std::vector<SecondOrderSection<CoeffType>> sections_;
+    std::vector<SecondOrderSection<CoeffType>::CalcFrame> buffer_;
+
 };
 
 template<int NumLen, int DenLen>
@@ -32,22 +40,38 @@ Filter<NumLen, DenLen>::Filter(const CoeffType (*num)[NumLen], const CoeffType (
 
 template<int NumLen, int DenLen>
 template<typename Frame>
-Frame Filter<NumLen, DenLen>::processFrame(Frame frame) {
+void Filter<NumLen, DenLen>::processFrame(Frame frame) {
     SecondOrderSection<CoeffType>::CalcFrame calcFrame{static_cast<double>(frame.left),
                                                        static_cast<double >(frame.right)};
-    for (auto &&i:sections_) {
-        i.calcDenZ();
-        i.calcNumZ();
-    }
 
+    prepareSections();
     for (auto &&i: sections_) {
         calcFrame = i.processFrame(calcFrame);
     }
 
-    Frame out;
-    out.left = calcFrame.left;
-    out.right = calcFrame.right;
-    return std::move(out);
+    buffer_.push_back(calcFrame);
+}
+
+template<int NumLen, int DenLen>
+void Filter<NumLen, DenLen>::prepareSections() {
+    for (auto &&i: sections_) {
+        i.calcNumZ();
+        i.calcDenZ();
+    }
+}
+
+template<int NumLen, int DenLen>
+void Filter<NumLen, DenLen>::setBufferSize(std::size_t buffSize) {
+    buffer_.reserve(buffSize);
+
+}
+
+template<int NumLen, int DenLen>
+std::vector<SecondOrderSection<CoeffType>::CalcFrame> Filter<NumLen, DenLen>::harvest() {
+    std::vector<SecondOrderSection<CoeffType>::CalcFrame> swap;
+    swap.reserve(buffer_.size());
+    swap.swap(buffer_);
+    return std::move(swap);
 }
 
 #endif //EQULIZER_FILTER_H

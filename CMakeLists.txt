@@ -15,10 +15,13 @@ add_executable(equlizer main.cpp ${RESOURCES}
         src/DecodedAudioReciever.h
         src/DecodedAudioIterator.h
         src/DecodedAudioIterator.cpp
-        src/Filter.cpp
         src/Filter.h
         src/SecondOrderSection.cpp
         src/SecondOrderSection.h
         src/AudioProcessor.cpp
-        src/AudioProcessor.h src/AudioProcessor.cpp src/AudioProcessor.h)
+        src/AudioProcessor.h
+        src/AudioProcessor.cpp
+        src/AudioProcessor.h
+        src/SosFilterController.cpp
+        src/SosFilterController.h)
 qt5_use_modules(equlizer Quick Core Multimedia Concurrent Widgets)

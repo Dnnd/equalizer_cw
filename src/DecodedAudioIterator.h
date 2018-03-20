@@ -3,7 +3,7 @@
 
 
 #include <QtMultimedia/QAudioBuffer>
-
+#include <QDebug>
 template<typename SampleType>
 class DecodedAudioIterator {
 public:
@@ -49,19 +49,20 @@ DecodedAudioIterator<SampleType>::DecodedAudioIterator(std::vector<QAudioBuffer>
         externalPos_ = -1;
         return;
     }
+    externalPos_ = 0;
     std::size_t total = 0;
     for (auto &&i: *buffer_) {
         if (total + i.frameCount() >= frame) {
-            internalPos_ = frame - total - 1;
+            internalPos_ = frame - total;
             return;
         }
         total += i.frameCount();
         ++externalPos_;
     }
+
     internalPos_ = -1;
     externalPos_ = -1;
     buffer_ = nullptr;
-
 }
 
 template<typename SampleType>

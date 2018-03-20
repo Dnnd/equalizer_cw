@@ -3,6 +3,7 @@
 #define EQULIZER_SECONDORDERSECTION_H
 
 #include <array>
+#include <QDebug>
 
 enum SoSCoeffs {
     B0,
@@ -46,7 +47,6 @@ typename SecondOrderSection<CoeffType>::CalcFrame SecondOrderSection<CoeffType>:
     buffer[0].left = xLeft;
     buffer[0].right = xRight;
     CalcFrame out{xLeft * coeffs[B0] + calcBuffer[1].left, xRight * coeffs[B0] + calcBuffer[1].right};
-
     return out;
 }
 
