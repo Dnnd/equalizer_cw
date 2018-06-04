@@ -1,11 +1,11 @@
-import QtQuick 2.10
-import QtQuick.Controls 2.3
+import QtQuick 2.9
+import QtQuick.Controls 2.2
 import Qt.labs.platform 1.0
 import QtQuick.Layouts 1.3
 
 ApplicationWindow {
     title: "My Application"
-    width: 640
+    width: 960
     height: 480
     visible: true
     ColumnLayout {
@@ -54,7 +54,7 @@ ApplicationWindow {
                     text: qsTr("Echo")
                    }
                   Switch {
-                    text: qsTr("delay")
+                    text: qsTr("Delay")
                   }
             }
         }
@@ -70,19 +70,21 @@ ApplicationWindow {
                      ColumnLayout{
                                 anchors.fill: parent
                                 Label {
-                                    text: "40 dB"
+                                    text: "3 dB"
                                     Layout.fillHeight: true
                                 }
 
                                 Label {
                                     id: botLabel
-                                    text: "-3 dB"
+                                    text: "-40 dB"
 
                                 }
                      }
 
                      Repeater {
-                        model: ["0 - 396 Hz", "396 - 630 Hz",
+                        model: [
+                        "0 - 396 Hz",
+                        "396 - 630 Hz",
                         "630 - 1000 Hz",
                         "1000 - 1587 Hz",
                         "1587 - 2520 Hz",
@@ -100,15 +102,17 @@ ApplicationWindow {
                                 id: slider
                                 value: 1
                                 stepSize: 1
-                                from: -3
-                                to: 40
+                                from: -40
+                                to: 3
                                 orientation: Qt.Vertical
+
+
                                 Layout.fillWidth: true
                                 onMoved:{
                                     sliderIndicator.text = value
                                     audioController.setGain(index, value)
                                 }
-                            }
+                                }
                               Label {
                                 text: modelData
                                 Layout.alignment: Qt.AlignHCenter

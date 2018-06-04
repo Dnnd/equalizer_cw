@@ -32,9 +32,5 @@ int main(int argc, char **argv) {
     context->setContextProperty("audioController", controller);
 
     engine.load(QUrl{"qrc:///main.qml"});
-
-    controller->play("sample.wav");
-
-
     return app.exec();
 }
