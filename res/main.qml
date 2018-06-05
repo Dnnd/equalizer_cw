@@ -4,7 +4,7 @@ import Qt.labs.platform 1.0
 import QtQuick.Layouts 1.3
 
 ApplicationWindow {
-    title: "My Application"
+    title: "Equalizer"
     width: 960
     height: 480
     visible: true
@@ -38,26 +38,30 @@ ApplicationWindow {
                         onAccepted: {
                             acceptedLabel.text = fileDialog.file
                             audioController.playSong(fileDialog.file)
+                            playButton.text = "\u23F9"
                         }
 
                     }
             }
         }
-        GroupBox{
-            background: Rectangle {
-                border.width: 0
-            }
-            Layout.fillWidth: true
-            RowLayout{
-                anchors.fill: parent
-                  Switch {
-                    text: qsTr("Echo")
-                   }
-                  Switch {
-                    text: qsTr("Delay")
-                  }
+        RowLayout{
+    RoundButton {
+        id: playButton
+        text: "\u25BA"
+        onClicked:{
+
+            if (text == "\u25BA" ){
+                audioController.resume()
+                text =  "\u23F9"
+            }else {
+                 text = "\u25BA"
+                 audioController.stop()
             }
         }
+    }
+}
+
+
         GroupBox {
             Layout.fillWidth: true
             background: Rectangle {
@@ -65,10 +69,57 @@ ApplicationWindow {
                 border.width: 1
 
             }
+
             RowLayout{
+
+
+
                 anchors.fill: parent
+                 ColumnLayout{
+                    Switch {
+                        text: qsTr("Overdrive")
+                        onToggled: {
+                            audioController.toggleEffect("overdrive")
+
+                        }
+                    }
+                    Switch {
+                        text: qsTr("Echo")
+                        onToggled: {
+                            audioController.toggleEffect("echo")
+                             if(position == 1.0){
+                                echoControllerSlider.visible = true
+                                echoIndicator.visible = true
+                             }else if(position == 0){
+                                echoControllerSlider.visible = false
+                                echoIndicator.visible = false
+                             }
+                        }
+                    }
+                    RowLayout{
+                    Slider {
+                        id: echoControllerSlider
+                        value: 100
+                        stepSize: 10
+                        from: 50
+                        to: 200
+                        visible: false
+                        onMoved:{
+                            audioController.changeEffectParam("echo", value)
+                            echoIndicator.text = value
+                        }
+
+                    }
+                    Label {
+                        visible: false
+                        id: echoIndicator
+                        Layout.alignment: Qt.AlignHCenter
+                        text: echoControllerSlider.value
+                    }
+                    }
+                 }
+
                      ColumnLayout{
-                                anchors.fill: parent
                                 Label {
                                     text: "3 dB"
                                     Layout.fillHeight: true

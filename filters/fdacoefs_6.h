@@ -17,7 +17,7 @@
 #include "tmwtypes.h"
 /* 
  * Expected path to tmwtypes.h 
- * E:\Soft\Matlab2018a\extern\include\tmwtypes.h 
+ * E:\Soft\Matlab2018a\extern\simple_fft\tmwtypes.h
  */
 #define MWSPT_NSEC 25
 const int NL[MWSPT_NSEC] = { 1,3,1,3,1,3,1,3,1,3,1,3,1,3,1,3,1,3,1,3,1,3,1,3,1 };

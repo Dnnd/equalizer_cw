@@ -6,6 +6,8 @@
 #include "src/AudioPlayer.h"
 #include "src/AudioPlayerController.h"
 #include "filters/fdacoefs.h"
+#include "src/Echo.h"
+#include "src/Overdrive.h"
 #include <QQmlContext>
 
 int main(int argc, char **argv) {
@@ -23,8 +25,14 @@ int main(int argc, char **argv) {
     filters.emplace_back(NUM_BAND_6, DEN_BAND_6, MWSPT_NSEC);
     filters.emplace_back(NUM_BAND_7, DEN_BAND_7, MWSPT_NSEC);
 
-    AudioPlayer *player = new AudioPlayer(std::move(filters));
+    QThread audioPlayerThread;
 
+    AudioPlayer *player = new AudioPlayer(std::move(filters));
+    player->moveToThread(&audioPlayerThread);
+
+    Effect<stk::StkFloat> *echo = new Echo<stk::StkFloat>(100, player->getSampleRate());
+    player->registerEffect("echo",echo);
+    player->registerEffect("overdrive", new Overdrive<stk::StkFloat>(1. / 3, 2. / 3));
 
     AudioController *controller = new AudioController(player, &app);
     QQmlContext *context = engine.rootContext();
@@ -32,5 +40,8 @@ int main(int argc, char **argv) {
     context->setContextProperty("audioController", controller);
 
     engine.load(QUrl{"qrc:///main.qml"});
+
+    audioPlayerThread.start();
+
     return app.exec();
 }

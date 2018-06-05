@@ -91,6 +91,13 @@ int AudioPlayer::onNewAudioBufferAcquire(stk::StkFloat *outputBuffer) {
             for (auto &&effect : effectsStorage) {
                 result = effect->apply(result);
             }
+            if (result > 1) {
+                result = 1;
+            }
+            if (result < -1) {
+                result = -1;
+            }
+
             *outputBuffer++ = result;
         }
 
@@ -103,11 +110,6 @@ int AudioPlayer::onNewAudioBufferAcquire(stk::StkFloat *outputBuffer) {
         return 0;
 }
 
-void AudioPlayer::stop() {
-    if (dac.isStreamOpen()) {
-        dac.stopStream();
-    }
-}
 
 void AudioPlayer::resume() {
     if (dac.isStreamOpen()) {
@@ -120,8 +122,41 @@ void AudioPlayer::setGain(int band, int gain) {
     rightFilters[band].setGain(gain);
 }
 
-void AudioPlayer::registerEffect(std::string effectId, Effect<stk::StkFloat> *effect) {
+void AudioPlayer::registerEffect(const std::string &effectId, Effect<stk::StkFloat> *effect) {
     effectsRegistry[effectId] = effect;
     effectsStorage.push_back(effect);
 }
+
+stk::StkFloat AudioPlayer::getSampleRate() {
+    return stk::Stk::sampleRate();
+}
+
+AudioPlayer::~AudioPlayer() {
+    for (auto *effect: effectsStorage) {
+        delete effect;
+    }
+}
+
+void AudioPlayer::toggleEffect(const QString &effectId) {
+    auto found = effectsRegistry.find(effectId.toStdString());
+    if (found != effectsRegistry.end()) {
+        auto effect = found->second;
+        effect->toggle();
+    }
+}
+
+void AudioPlayer::changeParameter(QString effectId, QVariant param) {
+    auto found = effectsRegistry.find(effectId.toStdString());
+    if (found != effectsRegistry.end()) {
+        auto effect = found->second;
+        effect->changeParam(param);
+    }
+}
+
+void AudioPlayer::pause() {
+    if (dac.isStreamOpen()) {
+        dac.stopStream();
+    }
+}
+
 

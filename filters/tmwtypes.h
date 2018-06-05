@@ -29,7 +29,7 @@
 #include <limits.h>
 
 #ifdef __APPLE_CC__
-#include <stdbool.h>
+#simple_fft <stdbool.h>
 #endif
 
 #define LOGICAL_IS_A_TYPE
@@ -473,8 +473,8 @@ typedef unsigned long long  ulonglong_T;
 
 /*===========================================================================*
  * General or logical data types where the word size is not guaranteed.      *
- *  real_T     - possible settings include real32_T or real64_T              *
- *  time_T     - possible settings include real32_T or real64_T              *
+ *  real_T     - possible settings simple_fft real32_T or real64_T              *
+ *  time_T     - possible settings simple_fft real32_T or real64_T              *
  *  boolean_T                                                                *
  *  char_T                                                                   *
  *  int_T                                                                    *

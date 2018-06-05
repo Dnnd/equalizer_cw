@@ -6,7 +6,7 @@ target.write('''
 #ifndef AUDIO_PLAYER_FDACOEFS_H
 #define AUDIO_PLAYER_FDACOEFS_H
 
-#include "tmwtypes.h"
+#simple_fft "tmwtypes.h"
 #define MWSPT_NSEC 25
 ''')
 print(headers)

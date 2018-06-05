@@ -23,7 +23,7 @@
 /* General type conversion for MATLAB generated C-code  */
 /* 
  * Expected path to tmwtypes.h 
- * E:\Soft\Matlab2018a\extern\include\tmwtypes.h 
+ * E:\Soft\Matlab2018a\extern\simple_fft\tmwtypes.h
  */
 const real64_T NUM_BAND_1[MWSPT_NSEC][3] = {
         {
@@ -197,7 +197,7 @@ const real64_T DEN_BAND_1[MWSPT_NSEC][3] = {
 /* General type conversion for MATLAB generated C-code  */
 /* 
  * Expected path to tmwtypes.h 
- * E:\Soft\Matlab2018a\extern\include\tmwtypes.h 
+ * E:\Soft\Matlab2018a\extern\simple_fft\tmwtypes.h
  */
 const real64_T NUM_BAND_2[MWSPT_NSEC][3] = {
         {
@@ -371,7 +371,7 @@ const real64_T DEN_BAND_2[MWSPT_NSEC][3] = {
 /* General type conversion for MATLAB generated C-code  */
 /* 
  * Expected path to tmwtypes.h 
- * E:\Soft\Matlab2018a\extern\include\tmwtypes.h 
+ * E:\Soft\Matlab2018a\extern\simple_fft\tmwtypes.h
  */
 const real64_T NUM_BAND_3[MWSPT_NSEC][3] = {
         {
@@ -545,7 +545,7 @@ const real64_T DEN_BAND_3[MWSPT_NSEC][3] = {
 /* General type conversion for MATLAB generated C-code  */
 /* 
  * Expected path to tmwtypes.h 
- * E:\Soft\Matlab2018a\extern\include\tmwtypes.h 
+ * E:\Soft\Matlab2018a\extern\simple_fft\tmwtypes.h
  */
 const real64_T NUM_BAND_4[MWSPT_NSEC][3] = {
         {
@@ -719,7 +719,7 @@ const real64_T DEN_BAND_4[MWSPT_NSEC][3] = {
 /* General type conversion for MATLAB generated C-code  */
 /* 
  * Expected path to tmwtypes.h 
- * E:\Soft\Matlab2018a\extern\include\tmwtypes.h 
+ * E:\Soft\Matlab2018a\extern\simple_fft\tmwtypes.h
  */
 const real64_T NUM_BAND_5[MWSPT_NSEC][3] = {
         {
@@ -893,7 +893,7 @@ const real64_T DEN_BAND_5[MWSPT_NSEC][3] = {
 /* General type conversion for MATLAB generated C-code  */
 /* 
  * Expected path to tmwtypes.h 
- * E:\Soft\Matlab2018a\extern\include\tmwtypes.h 
+ * E:\Soft\Matlab2018a\extern\simple_fft\tmwtypes.h
  */
 const real64_T NUM_BAND_6[MWSPT_NSEC][3] = {
         {
@@ -1067,7 +1067,7 @@ const real64_T DEN_BAND_6[MWSPT_NSEC][3] = {
 /* General type conversion for MATLAB generated C-code  */
 /* 
  * Expected path to tmwtypes.h 
- * E:\Soft\Matlab2018a\extern\include\tmwtypes.h 
+ * E:\Soft\Matlab2018a\extern\simple_fft\tmwtypes.h
  */
 const real64_T NUM_BAND_7[MWSPT_NSEC][3] = {
         {

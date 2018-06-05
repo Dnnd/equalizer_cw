@@ -7,11 +7,10 @@
 #include "Filter.h"
 #include "Effect.h"
 #include <QThreadPool>
+#include <unordered_map>
 
 class AudioPlayer : public QObject {
 Q_OBJECT
-
-
 public:
     using Filter_t = Filter<3, 3>;
     using ChannelFiltersSet = std::vector<Filter_t>;
@@ -20,7 +19,12 @@ public:
 
     int onNewAudioBufferAcquire(stk::StkFloat *outputBuffer);
 
-    void registerEffect(std::string effectId, Effect<stk::StkFloat> *effect);
+    void registerEffect(const std::string &id, Effect<stk::StkFloat> *effect);
+
+
+    stk::StkFloat getSampleRate();
+
+    ~AudioPlayer() override;
 
 public slots:
 
@@ -28,9 +32,14 @@ public slots:
 
     void setGain(int band, int gain);
 
-    void stop();
+    void pause();
 
     void resume();
+
+    void toggleEffect(const QString &effectId);
+
+    void changeParameter(QString effectId, QVariant param);
+
 
 public:
 
@@ -45,10 +54,10 @@ private:
     unsigned bufferSize;
     stk::StkFrames frames;
     ChannelFiltersSet leftFilters;
-    ChannelFiltersSet  rightFilters;
+    ChannelFiltersSet rightFilters;
     QThreadPool *threadPool;
-    std::unordered_map<std::string, Effect<stk::StkFloat>*> effectsRegistry;
-    std::vector<Effect<stk::StkFloat>*> effectsStorage;
+    std::unordered_map<std::string, Effect<stk::StkFloat> *> effectsRegistry;
+    std::vector<Effect<stk::StkFloat> *> effectsStorage;
 };
 
 

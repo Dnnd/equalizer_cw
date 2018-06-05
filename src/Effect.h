@@ -8,8 +8,11 @@ class Effect {
 public:
     SampleType apply(SampleType sample);
 
+    virtual void changeParam(QVariant param);
 
     virtual void toggle();
+
+    virtual ~Effect<SampleType>() = default;
 
 protected:
     virtual SampleType applyImpl(SampleType sample) = 0;
@@ -28,6 +31,11 @@ SampleType Effect<SampleType>::apply(SampleType sample) {
         return applyImpl(sample);
     }
     return sample;
+}
+
+template<typename SampleType>
+void Effect<SampleType>::changeParam(QVariant param) {
+
 }
 
 
