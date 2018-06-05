@@ -45,7 +45,11 @@ ApplicationWindow {
             }
         }
         RowLayout{
+          Layout.fillWidth: true
+
+        Layout.alignment: Qt.AlignHCenter
     RoundButton {
+
         id: playButton
         text: "\u25BA"
         onClicked:{
