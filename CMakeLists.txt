@@ -18,7 +18,7 @@ add_executable(audio_player  ${RESOURCES}
         src/SecondOrderSection.h
         filters/fdacoefs_6.h
         filters/tmwtypes.h
-        src/Filter.h src/Echo.h filters/fdacoefs.h src/Effect.h src/Echo.h)
+        src/Filter.h src/Echo.h filters/fdacoefs.h src/Effect.h src/Echo.h src/Overdrive.h)
 
 include_directories(/usr/include/stk)
 target_link_libraries(audio_player libstk.so )
