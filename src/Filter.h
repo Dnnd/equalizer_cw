@@ -8,6 +8,7 @@
 #include <cmath>
 #include <QReadLocker>
 #include <QWriteLocker>
+
 template<int NumLen,
         int DenLen,
         typename CoeffType = double,
@@ -21,7 +22,7 @@ public:
 
     Filter(const Filter &other);
 
-    SampleType processSample(const SampleType &frame) const;
+    SampleType processSample(const SampleType &sample) const;
 
     void setGain(int gainDb);
 
@@ -53,8 +54,10 @@ SampleType Filter<NumLen, DenLen, CoeffType, SampleType>::processSample(const Sa
     for (auto &&i: sections_) {
         resSample = i.processSample(resSample);
     }
+    auto gain = getGain();
+    resSample = gain * resSample;
 
-    return resSample * getGain();
+    return resSample;
 }
 
 template<int NumLen, int DenLen, typename CoeffType, typename SampleType>

@@ -1,6 +1,7 @@
 #include <QtCore/QFuture>
 #include <QtConcurrent/QtConcurrent>
 #include "AudioPlayer.h"
+#include <QDebug>
 
 int tick(void *outputBuffer,
          void *inputBuffer,
@@ -9,9 +10,6 @@ int tick(void *outputBuffer,
          RtAudioStreamStatus status,
          void *userData) {
     AudioPlayer *player = (AudioPlayer *) userData;
-    if (status != 0) {
-        qDebug() << "status alert: " << status;
-    }
     stk::StkFloat *samples = (stk::StkFloat *) outputBuffer;
     return player->onNewAudioBufferAcquire(samples);
 
@@ -27,6 +25,7 @@ AudioPlayer::AudioPlayer(AudioPlayer::ChannelFiltersSet &&channelFilters, QObjec
     stk::Stk::setSampleRate(44100);
     //GUI-thread + audio-thread
     threadPool->setMaxThreadCount(QThread::idealThreadCount() - 2);
+    qDebug() << leftFilters.size() << " " << rightFilters.size();
 
 }
 
@@ -63,16 +62,19 @@ void AudioPlayer::play(QString audioPath) {
 }
 
 int AudioPlayer::onNewAudioBufferAcquire(stk::StkFloat *outputBuffer) {
-
     source.tick(frames);
     QFutureSynchronizer<stk::StkFloat> watcher;
 
     for (unsigned int j = 0; j < frames.frames(); j++) {
 
         auto leftFiltersProcessing = QtConcurrent::run(threadPool, [this, sample = frames(j, 0)] {
+
             stk::StkFloat res = 0;
             for (auto &filter : leftFilters) {
                 res += filter.processSample(sample);
+            }
+            for (auto &&effect : effectsStorage) {
+                res = effect->apply(res);
             }
             return res;
         });
@@ -82,22 +84,22 @@ int AudioPlayer::onNewAudioBufferAcquire(stk::StkFloat *outputBuffer) {
             for (auto &filter : rightFilters) {
                 res += filter.processSample(sample);
             }
+            for (auto &&effect : effectsStorage) {
+                res = effect->apply(res);
+            }
             return res;
         });
+
         watcher.addFuture(leftFiltersProcessing);
         watcher.addFuture(rightFiltersProcessing);
         for (const auto &future : watcher.futures()) {
             stk::StkFloat result = future.result();
-            for (auto &&effect : effectsStorage) {
-                result = effect->apply(result);
-            }
-            if (result > 1) {
-                result = 1;
-            }
+
             if (result < -1) {
                 result = -1;
+            } else if (result > 1) {
+                result = 1;
             }
-
             *outputBuffer++ = result;
         }
 
@@ -118,6 +120,9 @@ void AudioPlayer::resume() {
 }
 
 void AudioPlayer::setGain(int band, int gain) {
+    if(band >= leftFilters.size()){
+        return;
+    }
     leftFilters[band].setGain(gain);
     rightFilters[band].setGain(gain);
 }
