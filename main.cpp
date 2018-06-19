@@ -1,3 +1,5 @@
+#define kiss_fft_scalar double
+
 #include <iostream>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QThread>
@@ -9,7 +11,7 @@
 #include "src/Echo.h"
 #include "src/Overdrive.h"
 #include <QQmlContext>
-
+#include "QDebug"
 int main(int argc, char **argv) {
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication app(argc, argv);
@@ -29,7 +31,7 @@ int main(int argc, char **argv) {
     filters.emplace_back(NUM_BAND_10, DEN_BAND_10, MWSPT_NSEC_10);
     filters.emplace_back(NUM_BAND_11, DEN_BAND_11, MWSPT_NSEC_11);
     filters.emplace_back(NUM_BAND_12, DEN_BAND_12, MWSPT_NSEC_12);
-    filters.emplace_back(NUM_BAND_13, DEN_BAND_13, MWSPT_NSEC_13);
+//    filters.emplace_back(NUM_BAND_13, DEN_BAND_13, MWSPT_NSEC_13);
 
 
     AudioPlayer *player = new AudioPlayer(std::move(filters));
@@ -40,12 +42,21 @@ int main(int argc, char **argv) {
     player->registerEffect("overdrive", new Overdrive<stk::StkFloat>(1. / 3, 2. / 3));
 
     AudioController *controller = new AudioController(player, &app);
+    engine.load(QUrl{"qrc:///main.qml"});
+
     QQmlContext *context = engine.rootContext();
 
     context->setContextProperty("audioController", controller);
+    context->setContextProperty("audioSpectrum", player->getSpectrum());
 
-    engine.load(QUrl{"qrc:///main.qml"});
+    QObject *window = engine.rootObjects()[0];
 
+
+    QObject::connect(player, SIGNAL(inputSpectrumUpdate()),
+                     window, SLOT(updateInput()));
+
+    QObject::connect(player, SIGNAL(outputSpectrumUpdate()),
+                     window, SLOT(updateOutput()));
 
     return app.exec();
 }

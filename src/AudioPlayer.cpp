@@ -20,6 +20,7 @@ AudioPlayer::AudioPlayer(AudioPlayer::ChannelFiltersSet &&channelFilters, QObjec
           bufferSize{stk::RT_BUFFER_SIZE},
           leftFilters{std::move(channelFilters)},
           rightFilters{leftFilters},
+          spectre(stk::RT_BUFFER_SIZE/2, this),
           threadPool{new QThreadPool{this}} {
 
     stk::Stk::setSampleRate(44100);
@@ -63,7 +64,19 @@ void AudioPlayer::play(QString audioPath) {
 
 int AudioPlayer::onNewAudioBufferAcquire(stk::StkFloat *outputBuffer) {
     source.tick(frames);
+
     QFutureSynchronizer<stk::StkFloat> watcher;
+
+    auto leftInputSpectrum = QtConcurrent::run(threadPool, [this]{
+        spectre.lock();
+        spectre.setData(frames, 0);
+        emit inputSpectrumUpdate();
+        spectre.unlock();
+    });
+
+
+    std::vector<double> outputs;
+    outputs.reserve((frames.size() / 2));
 
     for (unsigned int j = 0; j < frames.frames(); j++) {
 
@@ -102,9 +115,17 @@ int AudioPlayer::onNewAudioBufferAcquire(stk::StkFloat *outputBuffer) {
             }
             *outputBuffer++ = result;
         }
-
+        outputs.push_back(watcher.futures()[0].result());
         watcher.clearFutures();
     }
+
+    auto outputSpectrum = QtConcurrent::run(threadPool,[this, outputs = std::move(outputs) ]{
+        spectre.lock();
+        spectre.setData(outputs, 1);
+        emit outputSpectrumUpdate();
+        spectre.unlock();
+    });
+
 
     if (source.isFinished()) {
         return 1;
@@ -162,6 +183,10 @@ void AudioPlayer::pause() {
     if (dac.isStreamOpen()) {
         dac.stopStream();
     }
+}
+
+AudioSpectre *AudioPlayer::getSpectrum() {
+    return &spectre;
 }
 
 

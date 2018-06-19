@@ -6,6 +6,7 @@
 #include <FileWvIn.h>
 #include "Filter.h"
 #include "Effect.h"
+#include "AudioSpectre.h"
 #include <QThreadPool>
 #include <unordered_map>
 
@@ -21,6 +22,7 @@ public:
 
     void registerEffect(const std::string &id, Effect<stk::StkFloat> *effect);
 
+    AudioSpectre *getSpectrum();
 
     stk::StkFloat getSampleRate();
 
@@ -46,6 +48,9 @@ public:
 
 signals:
 
+    void inputSpectrumUpdate();
+    void outputSpectrumUpdate();
+
     void finish();
 
 private:
@@ -58,6 +63,7 @@ private:
     QThreadPool *threadPool;
     std::unordered_map<std::string, Effect<stk::StkFloat> *> effectsRegistry;
     std::vector<Effect<stk::StkFloat> *> effectsStorage;
+    AudioSpectre spectre;
 };
 
 

@@ -3,8 +3,10 @@ import QtQuick.Controls 2.2
 import Qt.labs.platform 1.0
 import QtQuick.Layouts 1.3
 import QtQuick.Window 2.10
+import QtCharts 2.2
 
 ApplicationWindow {
+    objectName: "app"
     title: "Equalizer"
     width: Screen.width
     height: Screen.height
@@ -46,11 +48,12 @@ ApplicationWindow {
         }
     }
 
-    RowLayout {
-        anchors.fill: parent
+    ColumnLayout {
+        id: effects
+        anchors.horizontalCenter: parent.horizontalCenter
         Row {
 
-            Layout.alignment: Qt.AlignCenter
+            Layout.alignment: Qt.AlignHCenter
             RoundButton {
                 id: playButton
                 text: "\u25BA"
@@ -66,6 +69,7 @@ ApplicationWindow {
                 }
             }
             Column {
+                id: switches
                 Switch {
                     text: qsTr("Overdrive")
                     onToggled: {
@@ -73,6 +77,7 @@ ApplicationWindow {
                     }
                 }
                 Switch {
+
                     text: qsTr("Echo")
                     onToggled: {
                         audioController.toggleEffect("echo")
@@ -85,26 +90,78 @@ ApplicationWindow {
                         }
                     }
                 }
-                Slider {
-                    id: echoControllerSlider
-                    value: 100
-                    stepSize: 10
-                    from: 50
-                    to: 200
-                    visible: false
-                    onMoved: {
-                        audioController.changeEffectParam("echo", value)
-                        echoIndicator.text = value
-                    }
-                }
-                Label {
-                    visible: false
-                    id: echoIndicator
-                    Layout.alignment: Qt.AlignHCenter
-                    text: echoControllerSlider.value
+            }
+            Slider {
+                anchors.top: switches.verticalCenter
+                id: echoControllerSlider
+                value: 100
+                stepSize: 10
+                from: 50
+                to: 200
+
+                visible: false
+                onMoved: {
+                    audioController.changeEffectParam("echo", value)
+                    echoIndicator.text = value
                 }
             }
+            Label {
+                visible: false
+                id: echoIndicator
+                anchors.verticalCenter: echoControllerSlider.verticalCenter
+                text: echoControllerSlider.value
+            }
         }
+    }
+
+    ChartView {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: effects.bottom
+        anchors.bottom: footer.top
+
+        id: spectrum
+        ValueAxis {
+            id: axisLeft
+            min: -40
+            max: 25
+        }
+
+        ValueAxis {
+            id: axisRight
+            min: -40
+            max: 25
+        }
+
+        ValueAxis {
+            id: axisX
+            min: 0
+            max: 22050
+        }
+
+        LineSeries {
+            id: lineSeries1
+            name: "left"
+            axisX: axisX
+            axisY: axisLeft
+            useOpenGL: false
+        }
+
+        LineSeries {
+            id: lineSeries2
+            name: "right"
+            axisX: axisX
+            axisYRight: axisRight
+            useOpenGL: false
+        }
+    }
+
+    function updateInput() {
+        audioSpectrum.update(spectrum.series(0), 0)
+    }
+
+    function updateOutput() {
+        audioSpectrum.update(spectrum.series(1), 1)
     }
 
     footer: RowLayout {
